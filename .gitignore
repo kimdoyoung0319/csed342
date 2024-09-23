@@ -1,0 +1,9 @@
+# Ignores all dotfiles except this .gitignore.
+.*
+!.gitignore
+
+# Ignores assignment pdf files.
+*.pdf
+
+# Ignores files under directory __pycache__.
+__pycache__
