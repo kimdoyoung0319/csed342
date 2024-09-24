@@ -164,7 +164,7 @@ def find_route_dfs(dict_graph, start_station_id, end_station_id, max_depth=1000)
 
             # Add the next station to the stack if it has not been visited
             if next_station_id not in visited:
-                stack.append(next_station_id)
+                stack.insert(0, next_station_id)
 
     # END_YOUR_ANSWER
 
