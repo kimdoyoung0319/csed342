@@ -137,35 +137,27 @@ def find_route_dfs(dict_graph, start_station_id, end_station_id, max_depth=1000)
     travel_time = {start_station_id: 0}
 
     # BEGIN_YOUR_ANSWER
-
-    # Initialize the queue with the start station
-    stack = [start_station_id]
+    stack = [(start_station_id, 0)]
     visited = set()
 
     while stack:
-        current_station_id = stack.pop(0)
+        (current_station_id, current_depth) = stack.pop()
         visited.add(current_station_id)
 
-        # Check if we have reached the end station
-        if current_station_id == end_station_id:
+        if current_depth > max_depth:
             break
 
-        # Iterate over the routes from the current station
         for route in dict_graph[current_station_id].routes:
+            next_depth = current_depth + 1
             next_station_id = route.station_to.id
-            # Calculate the total travel time to reach the next station
             new_travel_time = travel_time[current_station_id] + route.travel_time
 
-            # Update the travel time and parent station if
-            # 1. the new time is less than the current time or 2. the station has not been visited
             if next_station_id not in travel_time or new_travel_time < travel_time[next_station_id]:
                 travel_time[next_station_id] = new_travel_time
                 parent[next_station_id] = current_station_id
 
-            # Add the next station to the stack if it has not been visited
             if next_station_id not in visited:
-                stack.insert(0, next_station_id)
-
+                stack.append((next_station_id, next_depth))
     # END_YOUR_ANSWER
 
     # Reconstruct the route by backtracking from the end station to the start station
