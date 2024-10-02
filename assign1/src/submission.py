@@ -132,7 +132,7 @@ def find_route_dfs(dict_graph, start_station_id, end_station_id, max_depth=1000)
     total_time is the accumulated travel_time, or None if no route is found.
     """
     # Dictionary to store the parent node of each station
-    parent = {start_station_id: None}
+    parent = {start_station_id: None, end_station_id: None}
     # Dictionary to store the travel time to reach each station
     travel_time = {start_station_id: 0}
 
@@ -144,8 +144,11 @@ def find_route_dfs(dict_graph, start_station_id, end_station_id, max_depth=1000)
         (current_station_id, current_depth) = stack.pop()
         visited.add(current_station_id)
 
-        if current_depth > max_depth:
+        if current_station_id == end_station_id:
             break
+
+        if current_depth > max_depth:
+            continue
 
         for route in dict_graph[current_station_id].routes:
             next_depth = current_depth + 1
@@ -162,6 +165,7 @@ def find_route_dfs(dict_graph, start_station_id, end_station_id, max_depth=1000)
 
     # Reconstruct the route by backtracking from the end station to the start station
     route = get_route_backtrack(parent, start_station_id, end_station_id)
+
     if route is None:
         return None, None
 
@@ -186,9 +190,11 @@ def find_route_iterative_deepening(dict_graph, start_station_id, end_station_id,
     route, total_time = None, None
 
     # BEGIN_YOUR_ANSWER
+    for depth in range(1, max_depth + 1):
+        (route, total_time) = find_route_dfs(dict_graph, start_station_id, end_station_id, depth)
 
-
-
+        if route is not None:
+            break
     # END_YOUR_ANSWER
 
     return route, total_time
@@ -210,9 +216,27 @@ def find_route_uniform_cost(dict_graph, start_station_id, end_station_id):
     travel_time = {start_station_id: 0}
 
     # BEGIN_YOUR_ANSWER
+    priority_queue = [start_station_id]
+    visited = set()
 
+    while priority_queue:
+        priority_queue.sort(key=(lambda x : travel_time[x]))
+        current_station_id = priority_queue.pop(0)
+        visited.add(current_station_id)
 
+        if current_station_id == end_station_id:
+            break
 
+        for route in dict_graph[current_station_id].routes:
+            next_station_id = route.station_to.id
+            new_travel_time = travel_time[current_station_id] + route.travel_time
+
+            if next_station_id not in travel_time or new_travel_time < travel_time[next_station_id]:
+                travel_time[next_station_id] = new_travel_time
+                parent[next_station_id] = current_station_id
+
+            if next_station_id not in visited:
+                priority_queue.append(next_station_id)
     # END_YOUR_ANSWER
 
     # Reconstruct the route by backtracking from the end station to the start station
@@ -243,9 +267,28 @@ def find_route_greedy(dict_graph, start_station_id, end_station_id, heuristic_ty
     travel_time = {start_station_id: 0}
 
     # BEGIN_YOUR_ANSWER
+    priority_queue = [start_station_id]
+    visited = set()
+    heuristic = lambda x : calc_heuristic(dict_graph[x], dict_graph[end_station_id], heuristic_type)
 
+    while priority_queue:
+        priority_queue.sort(key=heuristic)
+        current_station_id = priority_queue.pop(0)
+        visited.add(current_station_id)
 
+        if current_station_id == end_station_id:
+            break
 
+        for route in dict_graph[current_station_id].routes:
+            next_station_id = route.station_to.id
+            new_travel_time = travel_time[current_station_id] + route.travel_time
+
+            if next_station_id not in travel_time or new_travel_time < travel_time[next_station_id]:
+                travel_time[next_station_id] = new_travel_time
+                parent[next_station_id] = current_station_id
+
+            if next_station_id not in visited:
+                priority_queue.append(next_station_id)
     # END_YOUR_ANSWER
 
     # Reconstruct the route by backtracking from the end station to the start station
@@ -276,9 +319,29 @@ def find_route_a_star(dict_graph, start_station_id, end_station_id, heuristic_ty
     travel_time = {start_station_id: 0}
 
     # BEGIN_YOUR_ANSWER
+    priority_queue = [start_station_id]
+    visited = set()
+    heuristic = lambda x : calc_heuristic(dict_graph[x], dict_graph[end_station_id], heuristic_type)
+    sort_key = lambda x : heuristic(x) + travel_time[x]
 
+    while priority_queue:
+        priority_queue.sort(key=sort_key)
+        current_station_id = priority_queue.pop(0)
+        visited.add(current_station_id)
 
+        if current_station_id == end_station_id:
+            break
 
+        for route in dict_graph[current_station_id].routes:
+            next_station_id = route.station_to.id
+            new_travel_time = travel_time[current_station_id] + route.travel_time
+
+            if next_station_id not in travel_time or new_travel_time < travel_time[next_station_id]:
+                travel_time[next_station_id] = new_travel_time
+                parent[next_station_id] = current_station_id
+
+            if next_station_id not in visited:
+                priority_queue.append(next_station_id)
     # END_YOUR_ANSWER
 
     # Reconstruct the route by backtracking from the end station to the start station
