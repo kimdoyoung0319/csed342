@@ -5,5 +5,8 @@
 # Ignores assignment pdf files.
 *.pdf
 
+# Ignores submission directory.
+submission
+
 # Ignores files under directory __pycache__.
 __pycache__
