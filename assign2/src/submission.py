@@ -121,22 +121,29 @@ class ValueIterationDP(ValueIteration):
     """
 
     def solve(self, mdp):
-        values = defaultdict(float)
-        changed = defaultdict(lambda: False)
+        values = {}
 
         # BEGIN_YOUR_ANSWER
-        difference = 1
-        error = 0.001
-        while difference >= error:
-            difference = 0
-            for state in mdp.states:
-                prev = values[state]
-                qValues = [
-                    self.computeQ(mdp, values, state, action)
-                    for action in mdp.actions(state)
-                ]
-                values[state] = max(qValues)
-                difference = max(difference, abs(prev - values[state]))
+        def recursion(state):
+            if state in values:
+                return values[state]
+
+            if mdp.isEnd(state):
+                values[state] = 0.0
+                return values[state]
+
+            qValues = []
+            for action in mdp.actions(state):
+                qValue = sum(
+                    prob * (reward + mdp.discount() * recursion(succ))
+                    for succ, prob, reward in mdp.succAndProbReward(state, action)
+                )
+                qValues.append(qValue)
+
+            values[state] = max(qValues)
+            return values[state]
+
+        recursion(mdp.startState())
         # END_YOUR_ANSWER
 
         # Compute the optimal policy now
