@@ -4,15 +4,6 @@ import util, math, random
 from collections import defaultdict
 from util import ValueIteration
 
-
-# Returns a tuple whose ith element is decreased by 1 from t. Other elements are
-# same.
-def decreased(i: int, t: tuple):
-    li = list(t)
-    li[i] -= 1
-    return tuple(li)
-
-
 ############################################################
 # Problem 1a: BlackjackMDP
 
@@ -57,80 +48,63 @@ class BlackjackMDP(util.MDP):
     # in the list returned by succAndProbReward.
     def succAndProbReward(self, state, action):
         # BEGIN_YOUR_ANSWER
-        match action:
-            case "Take":
-                return self.takeResults(state)
-            case "Peek":
-                return self.peekResults(state)
-            case "Quit":
-                return self.quitResults(state)
+        def decreased(deck, card):
+            li = list(deck)
+            li[card] -= 1
+            return tuple(li)
 
-        return None
-
-    # Returns a list of (newState, prob, reward) if action 'Take' is held in
-    # argument state.
-    def takeResults(self, state):
-        total, top, deck = state
-
-        # What should be returned when the game is in end state?
-        # i.e. deck is None.
-        if deck is None:
-            return []
-
-        if all(count == 0 for count in deck):
-            return [((total, top, None), 1.0, total)]
-
-        if top is not None and self.cardValues[top] + total <= self.threshold:
-            nextState = (self.cardValues[top] + total, None, decreased(top, deck))
-            return [(nextState, 1.0, 0)]
-        elif top is not None:
-            nextState = (self.cardValues[top] + total, None, None)
-            return [(nextState, 1.0, 0)]
-
-        # What should happen when the player took a card from deck, which leads
-        # the deck to be empty and the sum of card values in player's hand
-        # to exceed the threshold?
-        result = []
-        for card in range(len(deck)):
-            if deck[card] <= 0:
-                continue
-            elif all(count == 0 for count in decreased(card, deck)):
-                score = self.cardValues[card] + total
-                nextState = (score, None, None)
-                result.append((nextState, deck[card] / sum(deck), score))
-            elif self.cardValues[card] + total > self.threshold:
-                nextState = (self.cardValues[card] + total, None, None)
-                result.append((nextState, deck[card] / sum(deck), 0))
+        def isDeckEmptyAfterTake(deck, card):
+            cards = range(len(deck))
+            if deck[card] > 1:
+                return False
             else:
-                nextState = (self.cardValues[card] + total, None, decreased(card, deck))
-                result.append((nextState, deck[card] / sum(deck), 0))
+                return all(deck[other] == 0 for other in cards if other != card)
 
-        return result
-
-    # Returns a list of (newState, prob, reward) if action 'Peek' is held in
-    # argument state.
-    def peekResults(self, state):
-        total, top, deck = state
-
-        if deck is None or top is not None:
-            return []
-
-        return [
-            ((total, card, deck), deck[card] / sum(deck), -self.peekCost)
-            for card in range(len(deck))
-            if deck[card] > 0
-        ]
-
-    # Returns a list of (newState, prob, reward) if action 'Quit' is held in
-    # argument state.
-    def quitResults(self, state):
+        value = self.cardValues
+        threshold = self.threshold
         total, top, deck = state
 
         if deck is None:
             return []
 
-        # What should be 'top' of state when quitting? None? Original top?
-        return [((total, top, None), 1.0, total)]
+        cards = range(len(deck))
+        cardsCount = sum(deck)
+
+        if action == "Take" and top is None:
+            result = []
+            for card in cards:
+                if deck[card] <= 0:
+                    continue
+                prob, reward, updated = (deck[card] / cardsCount, 0, None)
+                if isDeckEmptyAfterTake(deck, card):
+                    reward = value[card] + total
+                elif value[card] + total <= threshold:
+                    updated = decreased(deck, card)
+                result.append(((value[card] + total, None, updated), prob, reward))
+            return result
+
+        if action == "Take" and top is not None:
+            updated, reward = (None, 0)
+            if isDeckEmptyAfterTake(deck, top):
+                reward = value[top] + total
+            elif value[top] + total <= threshold:
+                updated = decreased(deck, top)
+            return [((value[top] + total, None, updated), 1.0, reward)]
+
+        if action == "Peek" and top is None:
+            result = []
+            for card in cards:
+                if deck[card] <= 0:
+                    continue
+                prob = deck[card] / cardsCount
+                result.append(((total, card, deck), prob, -self.peekCost))
+            return result
+
+        if action == "Peek" and top is not None:
+            return []
+
+        if action == "Quit":
+            return [((total, top, None), 1.0, total)]
         # END_YOUR_ANSWER
 
     def discount(self):
@@ -147,20 +121,22 @@ class ValueIterationDP(ValueIteration):
     """
 
     def solve(self, mdp):
-        difference = 1
-        threshold = 0.001
         values = defaultdict(float)
+        changed = defaultdict(lambda: False)
 
         # BEGIN_YOUR_ANSWER
-        while difference >= threshold:
+        difference = 1
+        error = 0.001
+        while difference >= error:
             difference = 0
             for state in mdp.states:
-                prevValue = values[state]
-                values[state] = max(
+                prev = values[state]
+                qValues = [
                     self.computeQ(mdp, values, state, action)
                     for action in mdp.actions(state)
-                )
-                difference = max(difference, abs(prevValue - values[state]))
+                ]
+                values[state] = max(qValues)
+                difference = max(difference, abs(prev - values[state]))
         # END_YOUR_ANSWER
 
         # Compute the optimal policy now
