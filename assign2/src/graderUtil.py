@@ -19,20 +19,24 @@ import gc
 defaultMaxSeconds = 5  # 5 second
 TOLERANCE = 1e-4  # For measuring whether two floats are equal
 
-BASIC_MODE = 'basic'
-ALL_MODE = 'auto'
+BASIC_MODE = "basic"
+ALL_MODE = "auto"
+
 
 # When reporting stack traces as feedback, ignore parts specific to the grading
 # system.
 def isTracebackItemGrader(item):
-    return item[0].endswith('graderUtil.py')
+    return item[0].endswith("graderUtil.py")
+
 
 def isCollection(x):
     return isinstance(x, list) or isinstance(x, tuple)
 
+
 def dumpYamlOrPprint(x, out):
     try:
         import yaml
+
         haveYaml = True
     except ImportError:
         yaml = None
@@ -43,48 +47,62 @@ def dumpYamlOrPprint(x, out):
     else:
         pprint.pprint(x, stream=out)
 
+
 # Return whether two answers are equal.
-def isEqual(trueAnswer, predAnswer, tolerance = TOLERANCE):
+def isEqual(trueAnswer, predAnswer, tolerance=TOLERANCE):
     # Handle floats specially
     if isinstance(trueAnswer, float) or isinstance(predAnswer, float):
         return abs(trueAnswer - predAnswer) < tolerance
     # Recurse on collections to deal with floats inside them
-    if isCollection(trueAnswer) and isCollection(predAnswer) and len(trueAnswer) == len(predAnswer):
+    if (
+        isCollection(trueAnswer)
+        and isCollection(predAnswer)
+        and len(trueAnswer) == len(predAnswer)
+    ):
         for a, b in zip(trueAnswer, predAnswer):
-            if not isEqual(a, b): return False
+            if not isEqual(a, b):
+                return False
         return True
     if isinstance(trueAnswer, dict) and isinstance(predAnswer, dict):
-        if len(trueAnswer) != len(predAnswer): return False
+        if len(trueAnswer) != len(predAnswer):
+            return False
         for k, v in list(trueAnswer.items()):
-            if not isEqual(predAnswer.get(k), v): return False
+            if not isEqual(predAnswer.get(k), v):
+                return False
         return True
 
     # Numpy array comparison
-    if type(trueAnswer).__name__=='ndarray':
+    if type(trueAnswer).__name__ == "ndarray":
         import numpy as np
+
         if isinstance(trueAnswer, np.ndarray) and isinstance(predAnswer, np.ndarray):
             if trueAnswer.shape != predAnswer.shape:
                 return False
             for a, b in zip(trueAnswer, predAnswer):
-                if not isEqual(a, b): return False
+                if not isEqual(a, b):
+                    return False
             return True
 
     # Do normal comparison
     return trueAnswer == predAnswer
 
+
 # Run a function, timing out after maxSeconds.
-class TimeoutFunctionException(Exception): pass
+class TimeoutFunctionException(Exception):
+    pass
+
+
 class TimeoutFunction:
     def __init__(self, function, maxSeconds):
         self.maxSeconds = maxSeconds
         self.function = function
 
     def handle_maxSeconds(self, signum, frame):
-        print('TIMEOUT!')
+        print("TIMEOUT!")
         raise TimeoutFunctionException()
 
     def __call__(self, *args):
-        if os.name == 'nt':
+        if os.name == "nt":
             # Windows does not have signal.SIGALRM
             # Will not stop after maxSeconds second but can still throw an exception
             timeStart = datetime.datetime.now()
@@ -100,12 +118,19 @@ class TimeoutFunction:
         signal.alarm(0)
         return result
 
+
 class Part:
-    def __init__(self, name, gradeFunc, maxPoints, maxSeconds, extraCredit, description):
-        if not isinstance(name, str): raise Exception("Invalid name: %s" % name)
-        if gradeFunc != None and not callable(gradeFunc): raise Exception("Invalid gradeFunc: %s" % gradeFunc)
-        if not isinstance(maxPoints, int): raise Exception("Invalid maxPoints: %s" % maxPoints)
-        if maxSeconds != None and not isinstance(maxSeconds, int): raise Exception("Invalid maxSeconds: %s" % maxSeconds)
+    def __init__(
+        self, name, gradeFunc, maxPoints, maxSeconds, extraCredit, description
+    ):
+        if not isinstance(name, str):
+            raise Exception("Invalid name: %s" % name)
+        if gradeFunc != None and not callable(gradeFunc):
+            raise Exception("Invalid gradeFunc: %s" % gradeFunc)
+        if not isinstance(maxPoints, int):
+            raise Exception("Invalid maxPoints: %s" % maxPoints)
+        if maxSeconds != None and not isinstance(maxSeconds, int):
+            raise Exception("Invalid maxSeconds: %s" % maxSeconds)
         # Specification
         self.name = name
         self.gradeFunc = gradeFunc  # Function to call to do grading
@@ -124,14 +149,19 @@ class Part:
     def fail(self):
         self.failed = True
 
+
 def checkValidAssignmentId(assnId):
-    if os.path.exists('submit.conf'):
+    if os.path.exists("submit.conf"):
         import yaml
-        with open('submit.conf', 'r') as submit_conf:
+
+        with open("submit.conf", "r") as submit_conf:
             info = yaml.load(submit_conf)
-        assignmentIds = set([assign['id'] for assign in info['assignments']])
+        assignmentIds = set([assign["id"] for assign in info["assignments"]])
         if not assnId in assignmentIds:
-            raise ValueError('Assignment ID %s not valid according to submit.conf' % assnId)
+            raise ValueError(
+                "Assignment ID %s not valid according to submit.conf" % assnId
+            )
+
 
 class Grader:
     def __init__(self, args=sys.argv):
@@ -143,10 +173,18 @@ class Grader:
         import argparse
 
         parser = argparse.ArgumentParser()
-        parser.add_argument('--js', action='store_true', help='Write JS instead of YAML')
-        parser.add_argument('--summary', action='store_true', help='Don\'t actually run code, just print out')
-        parser.add_argument('--assignmentId', help='assignmentId (used to read information)')
-        parser.add_argument('remainder', nargs=argparse.REMAINDER)
+        parser.add_argument(
+            "--js", action="store_true", help="Write JS instead of YAML"
+        )
+        parser.add_argument(
+            "--summary",
+            action="store_true",
+            help="Don't actually run code, just print out",
+        )
+        parser.add_argument(
+            "--assignmentId", help="assignmentId (used to read information)"
+        )
+        parser.add_argument("remainder", nargs=argparse.REMAINDER)
         self.params = parser.parse_args(args[1:])
 
         args = self.params.remainder
@@ -166,17 +204,35 @@ class Grader:
         self.currentPart = None  # Which part we're grading
         self.fatalError = False  # Set this if we should just stop immediately
 
-    def addBasicPart(self, name, gradeFunc, maxPoints=1, maxSeconds=defaultMaxSeconds, extraCredit=False, description=""):
+    def addBasicPart(
+        self,
+        name,
+        gradeFunc,
+        maxPoints=1,
+        maxSeconds=defaultMaxSeconds,
+        extraCredit=False,
+        description="",
+    ):
         """Add a basic test case. The test will be visible to students."""
-        if not self.isSelected(name): return
+        if not self.isSelected(name):
+            return
         part = Part(name, gradeFunc, maxPoints, maxSeconds, extraCredit, description)
         part.basic = True
         self.parts.append(part)
 
-    def addHiddenPart(self, name, gradeFunc, maxPoints=1, maxSeconds=defaultMaxSeconds, extraCredit=False, description=""):
+    def addHiddenPart(
+        self,
+        name,
+        gradeFunc,
+        maxPoints=1,
+        maxSeconds=defaultMaxSeconds,
+        extraCredit=False,
+        description="",
+    ):
         """Add a hidden test case. The test should NOT be visible to students
         so should be inside a BEGIN_HIDE block."""
-        if not self.isSelected(name): return
+        if not self.isSelected(name):
+            return
         if name in [part.name for part in self.parts]:
             raise Exception("Part name %s already exists" % name)
         part = Part(name, gradeFunc, maxPoints, maxSeconds, extraCredit, description)
@@ -184,7 +240,8 @@ class Grader:
 
     def addManualPart(self, name, maxPoints, extraCredit=False, description=""):
         """Add stub for a part to be manually graded."""
-        if not self.isSelected(name): return
+        if not self.isSelected(name):
+            return
         part = Part(name, None, maxPoints, None, extraCredit, description)
         self.manualParts.append(part)
 
@@ -205,81 +262,114 @@ class Grader:
             return None
 
     def grade(self):
-        print('========== START GRADING')
+        print("========== START GRADING")
         if self.mode == ALL_MODE:
             parts = self.parts
         else:
             parts = [part for part in self.parts if part.basic]
         for part in parts:
-            if self.fatalError: continue
-            if self.params.summary: continue
+            if self.fatalError:
+                continue
+            if self.params.summary:
+                continue
 
-            print('----- START PART %s%s: %s' % (part.name, ' (extra credit)' if part.extraCredit else '', part.description))
+            print(
+                "----- START PART %s%s: %s"
+                % (
+                    part.name,
+                    " (extra credit)" if part.extraCredit else "",
+                    part.description,
+                )
+            )
             self.currentPart = part
 
             startTime = datetime.datetime.now()
             try:
-                TimeoutFunction(part.gradeFunc, part.maxSeconds)()  # Call the part's function
+                TimeoutFunction(
+                    part.gradeFunc, part.maxSeconds
+                )()  # Call the part's function
             except KeyboardInterrupt:
                 raise
             except TimeoutFunctionException as e:
-                self.fail('Time limit (%s seconds) exceeded.' % part.maxSeconds)
+                self.fail("Time limit (%s seconds) exceeded." % part.maxSeconds)
             except MemoryError as e:
                 gc.collect()
-                self.fail('Memory limit exceeded.')
+                self.fail("Memory limit exceeded.")
             except Exception as e:
-                self.fail('Exception thrown: %s -- %s' % (str(type(e)), str(e)))
+                self.fail("Exception thrown: %s -- %s" % (str(type(e)), str(e)))
                 self.printException()
             except SystemExit as e:
                 # Catch SystemExit raised by exit(), quit() or sys.exit()
                 # This class is not a subclass of Exception and we don't
                 # expect students to raise it.
-                self.fail('Unexpected exit.')
+                self.fail("Unexpected exit.")
                 self.printException()
             endTime = datetime.datetime.now()
             part.seconds = (endTime - startTime).seconds
             if not (self.useSolution or part.basic):
-                displayPoints = '???/%s points (hidden test ungraded)' % part.maxPoints
+                displayPoints = "???/%s points (hidden test ungraded)" % part.maxPoints
             else:
-                displayPoints = '%s/%s points' % (part.points, part.maxPoints)
-            print('----- END PART %s [took %s (max allowed %s seconds), %s]' % (part.name, endTime - startTime, part.maxSeconds, displayPoints))
+                displayPoints = "%s/%s points" % (part.points, part.maxPoints)
+            print(
+                "----- END PART %s [took %s (max allowed %s seconds), %s]"
+                % (part.name, endTime - startTime, part.maxSeconds, displayPoints)
+            )
             print()
 
         activeParts = [part for part in parts if self.useSolution or part.basic]
 
         totalPoints = sum(part.points for part in activeParts if not part.extraCredit)
         extraCredit = sum(part.points for part in activeParts if part.extraCredit)
-        maxTotalPoints = sum(part.maxPoints for part in activeParts if not part.extraCredit)
+        maxTotalPoints = sum(
+            part.maxPoints for part in activeParts if not part.extraCredit
+        )
         maxExtraCredit = sum(part.maxPoints for part in activeParts if part.extraCredit)
         if not self.useSolution:
-            print('Note that the hidden test cases do not check for correctness.' \
-            '\nThey are provided for you to verify that the functions do not crash and run within the time limit.' \
-            '\nPoints for these parts not assigned by the grader (indicated by "--").')
-        print('========== END GRADING [%d points (%d/%d points (auto/coding only) + %d/%d extra credit)]' % \
-            (totalPoints + extraCredit, totalPoints, maxTotalPoints, extraCredit, maxExtraCredit))
+            print(
+                "Note that the hidden test cases do not check for correctness."
+                "\nThey are provided for you to verify that the functions do not crash and run within the time limit."
+                '\nPoints for these parts not assigned by the grader (indicated by "--").'
+            )
+        print(
+            "========== END GRADING [%d points (%d/%d points (auto/coding only) + %d/%d extra credit)]"
+            % (
+                totalPoints + extraCredit,
+                totalPoints,
+                maxTotalPoints,
+                extraCredit,
+                maxExtraCredit,
+            )
+        )
 
         # Compute late days (need assignmentId to read dueDate out of submit.conf)
         lateDays = None
-        if os.path.exists('metadata') and os.path.exists('submit.conf') and self.params.assignmentId is not None:
-            try: 
+        if (
+            os.path.exists("metadata")
+            and os.path.exists("submit.conf")
+            and self.params.assignmentId is not None
+        ):
+            try:
                 import yaml
-                timestamp = yaml.load(open('metadata'))['time']
-                timestamp = datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M')
+
+                timestamp = yaml.load(open("metadata"))["time"]
+                timestamp = datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M")
             except:
                 raise
                 # This might be better to do anyway (doesn't work because this metadata is copied off AFS)
-                #timestamp = datetime.datetime.fromtimestamp(os.path.getctime('metadata'))
-            with open('submit.conf', 'r') as submit_conf:
+                # timestamp = datetime.datetime.fromtimestamp(os.path.getctime('metadata'))
+            with open("submit.conf", "r") as submit_conf:
                 import yaml
+
                 info = yaml.load(submit_conf)
             dueDate = [
-                assign['dueDate']
-                for assign in info['assignments']
-                if assign['id'] == self.params.assignmentId
+                assign["dueDate"]
+                for assign in info["assignments"]
+                if assign["id"] == self.params.assignmentId
             ][0]
             import dateutil.parser
+
             dueDate = dateutil.parser.parse(dueDate)
-            dueDate = dueDate.replace(hour = 23, minute = 59) # Choose the end of the day
+            dueDate = dueDate.replace(hour=23, minute=59)  # Choose the end of the day
             if timestamp > dueDate:
                 diff = timestamp - dueDate
                 lateDays = int(math.ceil(diff.days + diff.seconds / (3600.0 * 24.0)))
@@ -287,77 +377,93 @@ class Grader:
                 lateDays = 0
 
         result = {}
-        result['fatalError'] = self.fatalError
-        result['mode'] = self.mode
-        result['totalPoints'] = totalPoints
-        result['maxTotalPoints'] = maxTotalPoints
-        result['extraCredit'] = extraCredit
-        result['maxExtraCredit'] = maxExtraCredit
-        result['messages'] = self.messages
+        result["fatalError"] = self.fatalError
+        result["mode"] = self.mode
+        result["totalPoints"] = totalPoints
+        result["maxTotalPoints"] = maxTotalPoints
+        result["extraCredit"] = extraCredit
+        result["maxExtraCredit"] = maxExtraCredit
+        result["messages"] = self.messages
         if lateDays is not None:
-            result['lateDays'] = lateDays
+            result["lateDays"] = lateDays
         resultParts = []
         for part in parts:
             r = {}
-            r['name'] = part.name
-            r['points'] = part.points
-            r['maxPoints'] = part.maxPoints
-            r['seconds'] = part.seconds
-            r['maxSeconds'] = part.maxSeconds
+            r["name"] = part.name
+            r["points"] = part.points
+            r["maxPoints"] = part.maxPoints
+            r["seconds"] = part.seconds
+            r["maxSeconds"] = part.maxSeconds
             if part.side is not None:
-                r['side'] = part.side
-            r['extraCredit'] = part.extraCredit
-            r['messages'] = part.messages
-            r['description'] = part.description
+                r["side"] = part.side
+            r["extraCredit"] = part.extraCredit
+            r["messages"] = part.messages
+            r["description"] = part.description
             resultParts.append(r)
-        result['parts'] = resultParts
+        result["parts"] = resultParts
 
         self.output(self.mode, result)
 
         # Only create if doesn't exist (be careful not to overwrite the manual!)
         if len(self.manualParts) > 0:
-            if not os.path.exists(self.getOutputPath('manual')) or self.params.js:
-                print("Writing %d manual parts to 'grader-manual.out'" % len(self.manualParts))
+            if not os.path.exists(self.getOutputPath("manual")) or self.params.js:
+                print(
+                    "Writing %d manual parts to 'grader-manual.out'"
+                    % len(self.manualParts)
+                )
                 result = {}
                 resultParts = []
                 for part in self.manualParts:
                     r = {}
-                    r['name'] = part.name
+                    r["name"] = part.name
                     # Let the question marks be filled in later
-                    r['points'] = '?'
-                    r['maxPoints'] = part.maxPoints
-                    r['extraCredit'] = part.extraCredit
-                    r['messages'] = ['?']
-                    r['description'] = part.description
+                    r["points"] = "?"
+                    r["maxPoints"] = part.maxPoints
+                    r["extraCredit"] = part.extraCredit
+                    r["messages"] = ["?"]
+                    r["description"] = part.description
                     resultParts.append(r)
-                result['parts'] = resultParts
-                self.output('manual', result)
+                result["parts"] = resultParts
+                self.output("manual", result)
             else:
                 pass
-        maxBasicPoints = sum(part.maxPoints for part in self.parts if part.basic and not part.extraCredit)
-        maxHiddenPoints = sum(part.maxPoints for part in self.parts if not part.basic and not part.extraCredit)
-        maxManualPoints = sum(part.maxPoints for part in self.manualParts if not part.extraCredit)
-        print("Total max points (basic auto/coding + hidden auto/coding + manual/written): %d + %d + %d = %d" % \
-            (maxBasicPoints, maxHiddenPoints, maxManualPoints, \
-            maxBasicPoints + maxHiddenPoints + maxManualPoints))
+        maxBasicPoints = sum(
+            part.maxPoints for part in self.parts if part.basic and not part.extraCredit
+        )
+        maxHiddenPoints = sum(
+            part.maxPoints
+            for part in self.parts
+            if not part.basic and not part.extraCredit
+        )
+        maxManualPoints = sum(
+            part.maxPoints for part in self.manualParts if not part.extraCredit
+        )
+        print(
+            "Total max points (basic auto/coding + hidden auto/coding + manual/written): %d + %d + %d = %d"
+            % (
+                maxBasicPoints,
+                maxHiddenPoints,
+                maxManualPoints,
+                maxBasicPoints + maxHiddenPoints + maxManualPoints,
+            )
+        )
 
     def getOutputPath(self, mode):
         if self.params.js:
-            return 'grader-%s.js' % mode
+            return "grader-%s.js" % mode
         else:
-            return 'grader-%s.out' % mode
+            return "grader-%s.out" % mode
 
     def output(self, mode, result):
         path = self.getOutputPath(mode)
         if self.params.js:
-            with open(path, 'w') as out:
-                print('var ' + mode + 'Result = '+ json.dumps(result) + ';', file=out)
+            with open(path, "w") as out:
+                print("var " + mode + "Result = " + json.dumps(result) + ";", file=out)
         else:
-            path = 'grader-%s.out' % mode
-            with open(path, 'w') as out:
+            path = "grader-%s.out" % mode
+            with open(path, "w") as out:
                 dumpYamlOrPprint(result, out)
-        print('Wrote results to %s' % path)
-
+        print("Wrote results to %s" % path)
 
     # Called by the grader to modify state of the current part
 
@@ -365,10 +471,10 @@ class Grader:
         if not self.currentPart.failed:
             self.currentPart.points = self.currentPart.maxPoints
         return True
-        
+
     def assignPartialCredit(self, credit):
         self.currentPart.points = credit
-        return True;
+        return True
 
     def setSide(self, side):
         self.currentPart.side = side
@@ -378,18 +484,20 @@ class Grader:
             return self.fail("File '%s' does not exist" % path)
         if os.path.getsize(path) == 0:
             return self.fail("File '%s' is empty" % path)
-        if os.name == 'nt':
+        if os.name == "nt":
             # Windows does not have the `file` command
             # Use very, very basic check
             try:
-                with open(path, 'rb') as fin:
-                    if fin.read(4) != '%PDF':
-                        return self.fail("File '%s' does not look like a PDF file." % path)
+                with open(path, "rb") as fin:
+                    if fin.read(4) != "%PDF":
+                        return self.fail(
+                            "File '%s' does not look like a PDF file." % path
+                        )
             except Exception as e:
                 return self.fail("File '%s' cannot be opened: %s" % (path, e))
         else:
-            fileType = os.popen('file %s' % path).read()
-            if 'PDF document' not in fileType:
+            fileType = os.popen("file %s" % path).read()
+            if "PDF document" not in fileType:
                 return self.fail("File '%s' is not a PDF file: %s" % (path, fileType))
         return self.assignFullCredit()
 
@@ -403,35 +511,42 @@ class Grader:
         if predAnswer in trueAnswers:
             return self.assignFullCredit()
         else:
-            return self.fail("Expected one of %s, but got '%s'" % (trueAnswers, predAnswer))
+            return self.fail(
+                "Expected one of %s, but got '%s'" % (trueAnswers, predAnswer)
+            )
 
-    def requireIsEqual(self, trueAnswer, predAnswer, tolerance = TOLERANCE):
+    def requireIsEqual(self, trueAnswer, predAnswer, tolerance=TOLERANCE):
         if isEqual(trueAnswer, predAnswer, tolerance):
             return self.assignFullCredit()
         else:
-            return self.fail("Expected '%s', but got '%s'" % (str(trueAnswer), str(predAnswer)))
+            return self.fail(
+                "Expected '%s', but got '%s'" % (str(trueAnswer), str(predAnswer))
+            )
 
-    def requireIsLessThan(self, lessThanQuantity, predAnswer ):
+    def requireIsLessThan(self, lessThanQuantity, predAnswer):
         if predAnswer < lessThanQuantity:
             return self.assignFullCredit()
         else:
-            return self.fail("Expected to be < %f, but got %f" % (lessThanQuantity, predAnswer) )
+            return self.fail(
+                "Expected to be < %f, but got %f" % (lessThanQuantity, predAnswer)
+            )
 
-    def requireIsGreaterThan(self, greaterThanQuantity, predAnswer ):
+    def requireIsGreaterThan(self, greaterThanQuantity, predAnswer):
         if predAnswer > greaterThanQuantity:
             return self.assignFullCredit()
         else:
-            return self.fail("Expected to be > %f, but got %f" %
-                    (greaterThanQuantity, predAnswer) )
+            return self.fail(
+                "Expected to be > %f, but got %f" % (greaterThanQuantity, predAnswer)
+            )
 
     def requireIsTrue(self, predAnswer):
         if predAnswer:
             return self.assignFullCredit()
         else:
-            return self.fail("Expected to be true, but got false" )
+            return self.fail("Expected to be true, but got false")
 
     def fail(self, message):
-        print('FAIL:', message)
+        print("FAIL:", message)
         self.addMessage(message)
         if self.currentPart:
             self.currentPart.points = 0
@@ -439,9 +554,13 @@ class Grader:
         return False
 
     def printException(self):
-        tb = [item for item in traceback.extract_tb(sys.exc_info()[2]) if not isTracebackItemGrader(item)]
+        tb = [
+            item
+            for item in traceback.extract_tb(sys.exc_info()[2])
+            if not isTracebackItemGrader(item)
+        ]
         for item in traceback.format_list(tb):
-            self.fail('%s' % item)
+            self.fail("%s" % item)
 
     def addMessage(self, message):
         if not self.useSolution:
@@ -451,8 +570,10 @@ class Grader:
         else:
             self.messages.append(message)
 
+
 # Other utilities
 import time
+
 
 class TimeMeasure:
     def check(self):

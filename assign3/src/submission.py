@@ -1,4 +1,4 @@
-# 20240000 John Doe
+# 20200429 Doyoung Kim
 
 import random
 import collections
@@ -26,7 +26,13 @@ def extractWordFeatures(x):
     Example: "I am what I am" --> {'I': 2, 'am': 2, 'what': 1}
     """
     # BEGIN_YOUR_ANSWER (our solution is 6 lines of code, but don't worry if you deviate from this)
-    raise NotImplementedError  # remove this line before writing code
+    result = {}
+    for word in x.split():
+        if word in result:
+            result[word] += 1
+        else:
+            result[word] = 1
+    return result
     # END_YOUR_ANSWER
 
 
@@ -56,7 +62,15 @@ def learnPredictor(trainExamples, testExamples, featureExtractor, numIters, eta)
         return 1 / (1 + math.exp(-n))
 
     # BEGIN_YOUR_ANSWER (our solution is 14 lines of code, but don't worry if you deviate from this)
-    raise NotImplementedError  # remove this line before writing code
+    def gradient(phi, y, w):
+        label = 1 if y == 1 else 0
+        value = lambda k: (sigmoid(dotProduct(w, phi)) - label) * phi.get(k, 0)
+        return {k: value(k) for k in phi.keys()}
+
+    for _ in range(numIters):
+        for x, y in trainExamples:
+            phi = featureExtractor(x)
+            increment(weights, -eta, gradient(phi, y, weights))
     # END_YOUR_ANSWER
     return weights
 
@@ -74,6 +88,14 @@ def extractBigramFeatures(x):
     {('am', 'what'): 1, 'what': 1, ('I', 'am'): 2, 'I': 2, ('what', 'I'): 1, 'am': 2, ('<s>', 'I'): 1, ('am', '</s>'): 1}
     """
     # BEGIN_YOUR_ANSWER (our solution is 5 lines of code, but don't worry if you deviate from this)
-    raise NotImplementedError  # remove this line before writing code
+    phi = extractWordFeatures(x)
+    splitted = ["<s>"] + x.split() + ["</s>"]
+
+    for i in range(len(splitted) - 1):
+        pair = (splitted[i], splitted[i + 1])
+        if pair in phi:
+            phi[pair] += 1
+        else:
+            phi[pair] = 1
     # END_YOUR_ANSWER
     return phi

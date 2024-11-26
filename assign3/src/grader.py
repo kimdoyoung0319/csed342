@@ -40,6 +40,7 @@ def test_wrong(func_name, assertion=lambda pred: True):
 
     return test
 
+
 def veceq(vec1, vec2):
     def veclen(vec):
         return sum(1 for k, v in vec.items() if v != 0)
@@ -48,13 +49,15 @@ def veceq(vec1, vec2):
         return False
     else:
         return all(v == vec2.get(k, 0) for k, v in vec1.items())
-    
+
+
 ############################################################
 # Problem 3: sentiment classification
 ############################################################
 
 
 ### 3a
+
 
 # Basic sanity check for feature extraction
 def test3a0():
@@ -92,6 +95,7 @@ grader.addHiddenPart(
 
 
 ### 3b
+
 
 def test3b0():
     trainExamples = (("hello world", 1), ("goodnight moon", -1))
@@ -147,7 +151,8 @@ def test3b2():
         lambda x: (1 if dotProduct(featureExtractor(x), weights) >= 0 else -1),
     )
     devError = evaluatePredictor(
-        devExamples, lambda x: (1 if dotProduct(featureExtractor(x), weights) >= 0 else -1)
+        devExamples,
+        lambda x: (1 if dotProduct(featureExtractor(x), weights) >= 0 else -1),
     )
     print("Official: train error = %s, dev error = %s" % (trainError, devError))
     grader.requireIsEqual(0.0737198, trainError, 0.015)
@@ -162,8 +167,8 @@ grader.addBasicPart(
     description="test classifier on real polarity dev dataset",
 )
 
-
 ### 3c
+
 
 def test3c0():
     sentence = "I am what I am"
