@@ -1,4 +1,4 @@
-# 20240000 John Doe
+# 20240429 Doyoung Kim
 
 import os
 import math
@@ -39,8 +39,18 @@ def get_responsibility(data_point, centroids, beta):
     Returns: a dictionary whose keys are the the centroids' key names and
              value is a float as the responsibility of the cluster for the data point.
     """
+
     # BEGIN_YOUR_ANSWER
-    raise NotImplementedError  # remove this line before writing code
+    def responsibility(data_point, centroid):
+        return math.exp(-beta * euclidean_distance(data_point, centroid)) / sum(
+            math.exp(-beta * euclidean_distance(another, data_point))
+            for another in centroids.values()
+        )
+
+    return {
+        centroid_name: responsibility(data_point, centroids[centroid_name])
+        for centroid_name in centroids.keys()
+    }
     # END_YOUR_ANSWER
 
 
@@ -64,7 +74,10 @@ def update_soft_assignment(data, centroids, beta):
 
     """
     # BEGIN_YOUR_ANSWER
-    raise NotImplementedError  # remove this line before writing code
+    return {
+        tuple(data_point): get_responsibility(data_point, centroids, beta)
+        for data_point in data
+    }
     # END_YOUR_ANSWER
 
 
@@ -83,7 +96,7 @@ def update_centroids(soft_assignment_dict):
     Returns: A new dictionary representing the updated centroids
     """
     # BEGIN_YOUR_ANSWER
-    raise NotImplementedError  # remove this line before writing code
+    raise NotImplementedError
     # END_YOUR_ANSWER
 
 
