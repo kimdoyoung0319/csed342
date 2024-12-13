@@ -16,6 +16,9 @@ error-analysis
 grader-auto.out
 weights
 
+# Ignores temporal result files from assignment 4.
+assign4/src/results/
+
 # Ignores directories and files used for venv.
 bin/
 include/
