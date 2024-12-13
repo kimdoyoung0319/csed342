@@ -10,3 +10,8 @@ submission
 
 # Ignores files under directory __pycache__.
 __pycache__
+
+# Ignores temporal files from assignment 3.
+error-analysis
+grader-auto.out
+weights
