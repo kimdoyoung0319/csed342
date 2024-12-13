@@ -1,8 +1,15 @@
-# 20240000 John Doe
+# 20240429 Doyoung Kim
 
 import os
 import math
-from utils import converged, plot_2d, read_data, load_centroids, write_centroids_tofile, set_seed
+from utils import (
+    converged,
+    plot_2d,
+    read_data,
+    load_centroids,
+    write_centroids_tofile,
+    set_seed,
+)
 import matplotlib.pyplot as plt
 
 set_seed(42)
@@ -14,6 +21,7 @@ set_seed(42)
 ############################################################
 # Problem 1a: calculate distance
 
+
 def euclidean_distance(dp1, dp2):
     """Calculate the Euclidean distance between two data points.
 
@@ -24,11 +32,13 @@ def euclidean_distance(dp1, dp2):
     Returns: the Euclidean distance between two data points
     """
     # BEGIN_YOUR_ANSWER
-    raise NotImplementedError  # remove this line before writing code
+    return math.sqrt(sum((x1 - x2) ** 2 for x1, x2 in zip(dp1, dp2)))
     # END_YOUR_ANSWER
+
 
 ############################################################
 # Problem 1b: assign data points
+
 
 def assign_data(data_point, centroids):
     """Assign a single data point to the closest centroid. You should use
@@ -43,11 +53,14 @@ def assign_data(data_point, centroids):
     Returns: a string as the key name of the closest centroid to the data point
     """
     # BEGIN_YOUR_ANSWER
-    raise NotImplementedError  # remove this line before writing code
+    distance = lambda x: euclidean_distance(centroids.get(x), data_point)
+    return min(centroids, key=distance)
     # END_YOUR_ANSWER
+
 
 ############################################################
 # Problem 1c: update assignment
+
 
 def update_assignment(data, centroids):
     """Assign all data points to the closest centroids. You should use
@@ -67,9 +80,11 @@ def update_assignment(data, centroids):
     # BEGIN_YOUR_ANSWER
     raise NotImplementedError  # remove this line before writing code
     # END_YOUR_ANSWER
-            
+
+
 ############################################################
 # Problem 1d: update centroids
+
 
 def mean_of_points(data):
     """Calculate the mean of a given group of data points. You should NOT
@@ -100,7 +115,6 @@ def update_centroids(assignment_dict):
     # END_YOUR_ANSWER
 
 
-
 def main(data, init_centroids):
     #######################################################
     # You do not need to change anything in this function #
@@ -125,7 +139,7 @@ def main(data, init_centroids):
     return centroids
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     data, label = read_data("data/data_2d.csv")
     init_c = load_centroids("data/2d_init_centroids.csv")
     final_c = main(data, init_c)
