@@ -78,7 +78,16 @@ def update_assignment(data, centroids):
              do not include the centroid in the returned dictionary.
     """
     # BEGIN_YOUR_ANSWER
-    raise NotImplementedError  # remove this line before writing code
+    result = {}
+    for data_point in data:
+        centroid_name = assign_data(data_point, centroids)
+
+        if centroid_name in result:
+            result[centroid_name].append(data_point)
+        else:
+            result[centroid_name] = [data_point]
+
+    return result
     # END_YOUR_ANSWER
 
 
@@ -96,7 +105,7 @@ def mean_of_points(data):
     Returns: a list of floats as the mean of the given data points
     """
     # BEGIN_YOUR_ANSWER
-    raise NotImplementedError  # remove this line before writing code
+    return [sum(elem) / len(elem) for elem in zip(*data)]
     # END_YOUR_ANSWER
 
 
@@ -111,7 +120,10 @@ def update_centroids(assignment_dict):
     Returns: A new dictionary representing the updated centroids
     """
     # BEGIN_YOUR_ANSWER
-    raise NotImplementedError  # remove this line before writing code
+    return {
+        centroid_name: mean_of_points(assignment_dict[centroid_name])
+        for centroid_name in assignment_dict.keys()
+    }
     # END_YOUR_ANSWER
 
 
