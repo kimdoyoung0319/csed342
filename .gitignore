@@ -15,3 +15,10 @@ __pycache__
 error-analysis
 grader-auto.out
 weights
+
+# Ignores directories and files used for venv.
+bin/
+include/
+lib/
+share/
+pyvenv.cfg
