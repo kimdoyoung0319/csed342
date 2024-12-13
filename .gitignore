@@ -18,6 +18,9 @@ weights
 
 # Ignores temporal result files from assignment 4.
 assign4/src/results/
+2d_final_centroids_with_soft_kmeans.csv
+2d_final_centroids.csv
+mnist_final_centroids.csv
 
 # Ignores directories and files used for venv.
 bin/
