@@ -1,12 +1,25 @@
 import os
 import math
-from utils import converged, plot_2d, plot_centroids, read_data, \
-    load_centroids, write_centroids_tofile, set_seed
-from kmeans import euclidean_distance, assign_data, \
-    update_assignment, mean_of_points, update_centroids
+from utils import (
+    converged,
+    plot_2d,
+    plot_centroids,
+    read_data,
+    load_centroids,
+    write_centroids_tofile,
+    set_seed,
+)
+from kmeans import (
+    euclidean_distance,
+    assign_data,
+    update_assignment,
+    mean_of_points,
+    update_centroids,
+)
 import matplotlib.pyplot as plt
 
 set_seed(42)
+
 
 def main(data, init_centroids):
     #######################################################
@@ -31,7 +44,7 @@ def main(data, init_centroids):
     return centroids
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     data, label = read_data("data/mnist.csv")
     init_c = load_centroids("data/mnist_init_centroids.csv")
     final_c = main(data, init_c)

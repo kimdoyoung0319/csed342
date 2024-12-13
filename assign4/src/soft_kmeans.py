@@ -2,7 +2,13 @@
 
 import os
 import math
-from utils import plot_2d_soft, read_data, load_centroids, write_centroids_tofile, set_seed
+from utils import (
+    plot_2d_soft,
+    read_data,
+    load_centroids,
+    write_centroids_tofile,
+    set_seed,
+)
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -16,6 +22,7 @@ set_seed(42)
 
 ############################################################
 # Problem 2a: calculate responsibility
+
 
 def get_responsibility(data_point, centroids, beta):
     """Calculate the responsibiliy of each cluster for a single data point.
@@ -36,8 +43,10 @@ def get_responsibility(data_point, centroids, beta):
     raise NotImplementedError  # remove this line before writing code
     # END_YOUR_ANSWER
 
+
 ############################################################
 # Problem 2b: update assignment
+
 
 def update_soft_assignment(data, centroids, beta):
     """Find the responsibility of each cluster for all data points.
@@ -52,18 +61,20 @@ def update_soft_assignment(data, centroids, beta):
     Returns: a dictionary whose keys are the data points of type 'tuple'
              and values are the dictionary returned by get_responsibility function.
              (In python, 'list' cannot be the 'key' of 'dict')
-             
+
     """
     # BEGIN_YOUR_ANSWER
     raise NotImplementedError  # remove this line before writing code
     # END_YOUR_ANSWER
-            
+
+
 ############################################################
 # Problem 2c: update centroids
 
+
 def update_centroids(soft_assignment_dict):
     """Update centroid locations with the responsibility of the cluster for each point
-    as a weight. You can numpy methods for simple array computations. But the values of 
+    as a weight. You can numpy methods for simple array computations. But the values of
     the result dictionary must be of type 'list'.
 
     Arguments:
@@ -74,7 +85,6 @@ def update_centroids(soft_assignment_dict):
     # BEGIN_YOUR_ANSWER
     raise NotImplementedError  # remove this line before writing code
     # END_YOUR_ANSWER
-
 
 
 def main(data, init_centroids):
@@ -101,7 +111,7 @@ def main(data, init_centroids):
     return centroids
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     data, label = read_data("data/data_2d.csv")
     init_c = load_centroids("data/2d_init_centroids.csv")
     final_c = main(data, init_c)

@@ -12,11 +12,12 @@ import numpy as np
 def set_seed(seed):
     np.random.seed(seed)
 
+
 def read_data(fname):
     data = []
     label = []
-    with open(fname, newline='') as f:
-        reader = csv.reader(f, delimiter=',')
+    with open(fname, newline="") as f:
+        reader = csv.reader(f, delimiter=",")
         for r in reader:
             label.append(int(float(r[0])))
             data.append(list(map(float, r[1:])))
@@ -25,8 +26,8 @@ def read_data(fname):
 
 def load_centroids(fname):
     centroids = dict()
-    with open(fname, newline='') as f:
-        reader = csv.reader(f, delimiter=',')
+    with open(fname, newline="") as f:
+        reader = csv.reader(f, delimiter=",")
         for i, r in enumerate(reader):
             centroids[f"centroid{i}"] = list(map(float, r))
     return centroids
@@ -34,7 +35,7 @@ def load_centroids(fname):
 
 def write_centroids_tofile(fname, centroids):
     centroid_values = np.asarray(list(centroids.values()))
-    np.savetxt(fname, centroid_values, delimiter=',')
+    np.savetxt(fname, centroid_values, delimiter=",")
 
 
 def plot_2d(assignment_dict, centroids):
@@ -42,13 +43,15 @@ def plot_2d(assignment_dict, centroids):
     colors = {"centroid0": "blue", "centroid1": "red"}
     for k in assignment_dict.keys():
         v = np.array(assignment_dict[k])
-        plt.scatter(v[:, 0], v[:, 1], marker='o', s=15, c=colors[k])
-        plt.scatter(centroids[k][0], centroids[k][1], marker='x', s=100,
-                    c=colors[k], label=k)
+        plt.scatter(v[:, 0], v[:, 1], marker="o", s=15, c=colors[k])
+        plt.scatter(
+            centroids[k][0], centroids[k][1], marker="x", s=100, c=colors[k], label=k
+        )
     plt.xlim(-2, 5)
     plt.ylim(-2, 6)
     plt.legend()
     return fig
+
 
 def plot_2d_soft(soft_assignment_dict, centroids):
     fig = plt.figure()
@@ -60,21 +63,31 @@ def plot_2d_soft(soft_assignment_dict, centroids):
         x_axis_values.append(data_point[0])
         y_axis_values.append(data_point[1])
         centroid0_responsibilities.append(r_dict["centroid0"])
-    plt.scatter(x_axis_values, y_axis_values, marker='o', s=15, c=centroid0_responsibilities, cmap='coolwarm')
+    plt.scatter(
+        x_axis_values,
+        y_axis_values,
+        marker="o",
+        s=15,
+        c=centroid0_responsibilities,
+        cmap="coolwarm",
+    )
     for centroid, point in centroids.items():
-        plt.scatter(point[0], point[1], marker='x', s=100, c=colors[centroid], label=centroid)
-        
+        plt.scatter(
+            point[0], point[1], marker="x", s=100, c=colors[centroid], label=centroid
+        )
+
     plt.xlim(-2, 5)
     plt.ylim(-2, 6)
     plt.legend()
-    return fig    
+    return fig
+
 
 def plot_digit(digit):
     assert len(digit) == 784
     # mnist digits are size 28 x 28
     im = np.array(digit).reshape(28, 28)
     fig = plt.figure()
-    plt.imshow(im, cmap='gray')
+    plt.imshow(im, cmap="gray")
     return fig
 
 
