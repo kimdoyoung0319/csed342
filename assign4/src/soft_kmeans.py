@@ -96,7 +96,22 @@ def update_centroids(soft_assignment_dict):
     Returns: A new dictionary representing the updated centroids
     """
     # BEGIN_YOUR_ANSWER
-    raise NotImplementedError
+    centroids = {
+        centroid_name: {
+            point: soft_assignment_dict[point][centroid_name]
+            for point in soft_assignment_dict.keys()
+        }
+        for centroid_name in list(soft_assignment_dict.values())[0]
+    }
+
+    updated_centroid = lambda x: sum(
+        centroids[x][point] * np.array(point) for point in centroids[x].keys()
+    ) / sum(centroids[x].values())
+
+    return {
+        centroid_name: list(updated_centroid(centroid_name))
+        for centroid_name in centroids.keys()
+    }
     # END_YOUR_ANSWER
 
 
